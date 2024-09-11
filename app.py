@@ -49,7 +49,16 @@ def create_app():
     @app.route('/api/v1/workouts', methods=['GET'])
     def get_workouts():
         workouts = Workout.query.order_by(Workout.date.desc()).all()
-        return jsonify([workout.to_dict() for workout in workouts])
+        user_profile = UserProfile.query.first()
+        weight = user_profile.weight if user_profile else 70  # Default weight if not set
+
+        workout_dicts = []
+        for workout in workouts:
+            workout_dict = workout.to_dict()
+            workout_dict['calories_burned'] = workout.calculate_calories_burned(weight)
+            workout_dicts.append(workout_dict)
+
+        return jsonify(workout_dicts)
 
     @app.route('/api/v1/workouts', methods=['POST'])
     def create_workout():

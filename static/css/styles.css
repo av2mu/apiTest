@@ -168,7 +168,6 @@ button:hover {
 }
 
 .file-input-container {
-    text-align: center;
     margin: 20px 0;
 }
 
@@ -176,15 +175,19 @@ button:hover {
     position: relative;
     overflow: hidden;
     display: inline-block;
+}
+
+.file-input-label {
     background-color: #3498db;
     color: white;
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
+    display: inline-block;
     transition: background-color 0.3s;
 }
 
-.file-input-wrapper:hover {
+.file-input-label:hover {
     background-color: #2980b9;
 }
 
@@ -197,12 +200,7 @@ button:hover {
     cursor: pointer;
 }
 
-.file-input-label {
-    display: inline-block;
-    padding-right: 10px;
-}
-
-.file-name {
+#file-name {
     margin-top: 10px;
     font-style: italic;
 }

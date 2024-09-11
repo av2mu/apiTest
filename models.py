@@ -19,9 +19,28 @@ class Workout(db.Model):
             'heart_rate': self.heart_rate,
             'date': self.date.isoformat(),
             'pace': round(self.duration / self.distance, 2),
-            'calories_burned': round(self.distance * 100), 
             'image_url': f"/static/uploads/{self.image_filename}" if self.image_filename else None
         }
+
+    def calculate_calories_burned(self, weight):
+        # MET value for running (varies based on speed)
+        speed_mph = (self.distance / self.duration) * 60
+        if speed_mph < 5:
+            met = 6.0
+        elif speed_mph < 6:
+            met = 8.3
+        elif speed_mph < 7:
+            met = 9.8
+        elif speed_mph < 8:
+            met = 11.0
+        elif speed_mph < 9:
+            met = 11.8
+        else:
+            met = 12.8
+
+        # Calculate calories burned
+        calories = (met * 3.5 * weight * self.duration) / (200 * 60)
+        return round(calories, 2)
 
 class UserProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)

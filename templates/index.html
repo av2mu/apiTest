@@ -34,8 +34,10 @@
             </div>
             
             <div class="file-input-container">
-                <input type="file" name="image" accept="image/*" id="workout-image">
-                <label for="workout-image">Choose an image</label>
+                <div class="file-input-wrapper">
+                    <label for="workout-image" class="file-input-label">Drop a sweat pic! 🏃</label>
+                    <input type="file" name="image" accept="image/*" id="workout-image">
+                </div>
             </div>
             <div id="file-name"></div>
             
@@ -53,8 +55,9 @@
         window.addEventListener('load', function() {
             if (!localStorage.getItem('userWeight')) {
                 document.getElementById('weightPopup').style.display = 'flex';
+            } else {
+                loadWorkouts();
             }
-            loadWorkouts();
         });
 
         function saveWeight() {
@@ -72,7 +75,9 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (!data.id) {
+                    if (data.id) {
+                        loadWorkouts();
+                    } else {
                         console.error('Failed to update weight on server');
                     }
                 })
@@ -85,7 +90,7 @@
         }
 
         document.getElementById('workout-image').addEventListener('change', function(e) {
-            var fileName = e.target.files[0].name;
+            var fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
             document.getElementById('file-name').textContent = 'Selected file: ' + fileName;
         });
 
