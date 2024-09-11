@@ -159,5 +159,3 @@ workout-logger/
 └── templates/
     └── index.html
 ```
-
-To access the frontend, run the Flask application and navigate to `http://localhost:5000` in your web browser.

@@ -60,6 +60,21 @@ def create_app():
 
         return jsonify(workout_dicts)
 
+    @app.route('/api/v1/workouts/search', methods=['GET'])
+    def search_workouts():
+        query = request.args.get('q', '')
+        workouts = Workout.query.filter(Workout.route_nickname.ilike(f'%{query}%')).order_by(Workout.date.desc()).all()
+        user_profile = UserProfile.query.first()
+        weight = user_profile.weight if user_profile else 70  # Default weight if not set
+
+        workout_dicts = []
+        for workout in workouts:
+            workout_dict = workout.to_dict()
+            workout_dict['calories_burned'] = workout.calculate_calories_burned(weight)
+            workout_dicts.append(workout_dict)
+
+        return jsonify(workout_dicts)
+
     @app.route('/api/v1/workouts', methods=['POST'])
     def create_workout():
         data = request.form.to_dict()

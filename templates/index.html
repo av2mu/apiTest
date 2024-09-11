@@ -19,6 +19,7 @@
     <div class="container">
         <h1>Workout Logger</h1>
         
+        
         <div id="flash-messages"></div>
         
         <h2>Log Your Workout</h2>
@@ -45,6 +46,10 @@
         </form>
 
         <h2>Recent Workouts</h2>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search workouts...">
+            <button onclick="searchWorkouts()">Search</button>
+        </div>
         <div id="workoutsList"></div>
     </div>
 
@@ -207,6 +212,24 @@
             document.querySelector('input[name="workout_date"]').value = date;
             document.querySelector('input[name="workout_time"]').value = time;
         });
+
+        function searchWorkouts() {
+            const query = document.getElementById('searchInput').value;
+            fetch(`${API_BASE_URL}/workouts/search?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(workouts => {
+                const workoutsList = document.getElementById('workoutsList');
+                workoutsList.innerHTML = '';
+                workouts.forEach(workout => {
+                    const workoutElement = createWorkoutElement(workout);
+                    workoutsList.appendChild(workoutElement);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFlashMessage('Failed to search workouts.', 'error');
+            });
+        }
     </script>
 </body>
 </html>
