@@ -8,7 +8,7 @@ class Workout(db.Model):
     route_nickname = db.Column(db.String(100), nullable=False)  # Name of the route
     heart_rate = db.Column(db.Integer)  # Average heart rate, optional
     date = db.Column(db.DateTime, nullable=False)  # Date and time of the workout
-    image_filename = db.Column(db.String(255))
+    image_filename = db.Column(db.String(255)) # Filename of the image
 
     def to_dict(self):
         return {
@@ -22,12 +22,14 @@ class Workout(db.Model):
             'image_url': f"/static/uploads/{self.image_filename}" if self.image_filename else None
         }
 
-    def calculate_calories_burned(self, weight):
-        # Convert weight from lbs to kg
-        weight_kg = weight * 0.453592
-
-        # MET value for running (varies based on speed)
+    def calculate_calories_burned(self, weight_lbs):
+        # Convert weight from lbs to kg for calculation
+        weight_kg = weight_lbs * 0.453592
+        
+        # Calculate speed in mph
         speed_mph = (self.distance / self.duration) * 60
+        
+        # Determine MET value based on speed (mph)
         if speed_mph < 5:
             met = 6.0
         elif speed_mph < 6:
@@ -41,13 +43,16 @@ class Workout(db.Model):
         else:
             met = 12.8
 
-        # Calculate calories burned (weight_kg is in kg)
-        calories = (met * 3.5 * weight_kg * self.duration) / 200
+        # Calculate calories burned
+        # Formula: calories = MET * weight in kg * duration in hours
+        duration_hours = self.duration / 60
+        calories = met * weight_kg * duration_hours
+        
         return round(calories, 2)
 
 class UserProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    weight = db.Column(db.Float, nullable=False)
+    weight = db.Column(db.Float, nullable=False)  # in lbs
 
     def to_dict(self):
         return {
