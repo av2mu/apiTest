@@ -1,13 +1,13 @@
-from datetime import datetime
 import os
+from datetime import datetime
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 from flask_restful import Api, Resource, reqparse
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from database import db
 from models import Workout, UserProfile
+from database import db
 
 print("Starting app creation in app.py")
 
