@@ -51,7 +51,6 @@ Base URL: `/api/v1`
         "calories_burned": 320,
         "image_url": "/static/uploads/20230515183000_workout.jpg"
       },
-      ...
     ]
     ```
 
