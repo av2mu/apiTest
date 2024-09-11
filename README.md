@@ -179,6 +179,35 @@ Base URL: `/api/v1`
     }
     ```
 
+### 6. Search Workouts
+
+- **URL:** `/api/v1/workouts/search`
+- **Method:** GET
+- **Description:** Searches for workouts based on route nickname.
+- **Parameters:**
+  - Query Parameters:
+    - `q`: string (required) - Search query for route nickname
+- **Response:**
+  - Status Code: 200 OK
+  - Content-Type: application/json
+  - Body: Array of matching workout objects with calories burned
+    ```json
+    [
+      {
+        "id": 1,
+        "duration": 30.5,
+        "distance": 3.2,
+        "route_nickname": "Park Loop",
+        "heart_rate": 140,
+        "date": "2023-05-15T18:30:00",
+        "pace": 9.53,
+        "calories_burned": 320,
+        "image_url": "/static/uploads/20230515183000_workout.jpg"
+      },
+      // ... more matching workouts
+    ]
+    ```
+
 ## Backend File Structure
 
 ```
@@ -196,8 +225,9 @@ A simple HTML/JavaScript frontend is provided for demonstration purposes. It's a
 ```
 workout-logger/
 ├── static/
-│   └── css/
-│       └── styles.css
-└── templates/
-    └── index.html
+│ ├── css/
+│ │ └── styles.css
+│ └── uploads/ # Folder for uploaded workout images
+├── templates/
+│ └── index.html
 ```
