@@ -23,6 +23,9 @@ class Workout(db.Model):
         }
 
     def calculate_calories_burned(self, weight):
+        # Convert weight from lbs to kg
+        weight_kg = weight * 0.453592
+
         # MET value for running (varies based on speed)
         speed_mph = (self.distance / self.duration) * 60
         if speed_mph < 5:
@@ -38,8 +41,8 @@ class Workout(db.Model):
         else:
             met = 12.8
 
-        # Calculate calories burned
-        calories = (met * 3.5 * weight * self.duration) / (200 * 60)
+        # Calculate calories burned (weight_kg is in kg)
+        calories = (met * 3.5 * weight_kg * self.duration) / 200
         return round(calories, 2)
 
 class UserProfile(db.Model):

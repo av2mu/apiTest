@@ -122,9 +122,10 @@ Base URL: `/api/v1`
   - Body: application/json
     ```json
     {
-      "weight": 70.5
+      "weight": 150.5
     }
     ```
+  - `weight`: float (required) - User's weight in pounds (lbs)
 - **Response:**
   - Status Code: 200 OK
   - Content-Type: application/json
@@ -132,7 +133,7 @@ Base URL: `/api/v1`
     ```json
     {
       "id": 1,
-      "weight": 70.5
+      "weight": 150.5
     }
     ```
 

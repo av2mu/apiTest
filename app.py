@@ -52,7 +52,7 @@ def create_app():
     def get_workouts():
         workouts = Workout.query.order_by(Workout.date.desc()).all()
         user_profile = UserProfile.query.first()
-        weight = user_profile.weight if user_profile else 70  # Default weight if not set
+        weight = user_profile.weight if user_profile else 150  # Default weight if not set (150 lbs)
 
         workout_dicts = []
         for workout in workouts:
@@ -139,13 +139,13 @@ if __name__ == '__main__':
 
     # Request parser for user profile update
     profile_parser = reqparse.RequestParser()
-    profile_parser.add_argument('weight', type=float, required=True, help='Weight in kg is required')
+    profile_parser.add_argument('weight', type=float, required=True, help='Weight in lbs is required')
 
     class WorkoutListAPI(Resource):
         def get(self):
             workouts = Workout.query.order_by(Workout.date.desc()).all()
             user_profile = UserProfile.query.first()
-            weight = user_profile.weight if user_profile else 70  # Default weight if not set
+            weight = user_profile.weight if user_profile else 150  # Default weight if not set (150 lbs)
 
             workout_dicts = []
             for workout in workouts:
@@ -212,7 +212,7 @@ if __name__ == '__main__':
             query = request.args.get('q', '')
             workouts = Workout.query.filter(Workout.route_nickname.ilike(f'%{query}%')).order_by(Workout.date.desc()).all()
             user_profile = UserProfile.query.first()
-            weight = user_profile.weight if user_profile else 70  # Default weight if not set
+            weight = user_profile.weight if user_profile else 150  # Default weight if not set (150 lbs)
 
             workout_dicts = []
             for workout in workouts:
