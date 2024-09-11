@@ -151,7 +151,7 @@ Base URL: `/api/v1`
     ```json
     {
       "id": 1,
-      "weight": 70.5
+      "weight": 70
     }
     ```
 
@@ -164,7 +164,7 @@ Base URL: `/api/v1`
   - Body: application/json
     ```json
     {
-      "weight": 150.5
+      "weight": 150
     }
     ```
   - `weight`: float (required) - User's weight in pounds (lbs)
@@ -175,7 +175,7 @@ Base URL: `/api/v1`
     ```json
     {
       "id": 1,
-      "weight": 150.5
+      "weight": 150
     }
     ```
 
