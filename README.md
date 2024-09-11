@@ -76,6 +76,10 @@ Base URL: `/api/v1`
 - **Method:** GET
 - **Description:** Retrieves all workouts, sorted by date in descending order.
 - **Parameters:** None
+- **Sample API Call:**
+  ```bash
+  curl -X GET "http://localhost:5000/api/v1/workouts" -H "accept: application/json"
+  ```
 - **Response:**
   - Status Code: 200 OK
   - Content-Type: application/json
@@ -109,6 +113,17 @@ Base URL: `/api/v1`
     - `date`: string (required) - Date and time of the workout in ISO 8601 format (e.g., "2023-05-20T10:00:00")
     - `heart_rate`: integer (optional) - Average heart rate during the workout
     - `image`: file (optional) - Image file of the workout
+- **Sample API Call:**
+  ```bash
+  curl -X POST "http://localhost:5000/api/v1/workouts" \
+  -H "Content-Type: multipart/form-data" \
+  -F "duration=45.0" \
+  -F "distance=5.0" \
+  -F "route_nickname=Riverside Run" \
+  -F "date=2023-05-16T07:15:00" \
+  -F "heart_rate=150" \
+  -F "image=@/path/to/image.jpg"
+  ```
 - **Response:**
   - Status Code: 201 Created
   - Content-Type: application/json
@@ -135,6 +150,10 @@ Base URL: `/api/v1`
 - **Parameters:**
   - Path Parameters:
     - `id`: integer (required) - ID of the workout to delete
+- **Sample API Call:**
+  ```bash
+  curl -X DELETE "http://localhost:5000/api/v1/workouts/1"
+  ```
 - **Response:**
   - Status Code: 204 No Content
 
@@ -144,6 +163,10 @@ Base URL: `/api/v1`
 - **Method:** GET
 - **Description:** Retrieves the user's profile information.
 - **Parameters:** None
+- **Sample API Call:**
+  ```bash
+  curl -X GET "http://localhost:5000/api/v1/profile" -H "accept: application/json"
+  ```
 - **Response:**
   - Status Code: 200 OK
   - Content-Type: application/json
@@ -168,6 +191,12 @@ Base URL: `/api/v1`
     }
     ```
   - `weight`: float (required) - User's weight in pounds (lbs)
+- **Sample API Call:**
+  ```bash
+  curl -X PUT "http://localhost:5000/api/v1/profile" \
+  -H "Content-Type: application/json" \
+  -d '{"weight": 150}'
+  ```
 - **Response:**
   - Status Code: 200 OK
   - Content-Type: application/json
@@ -187,6 +216,10 @@ Base URL: `/api/v1`
 - **Parameters:**
   - Query Parameters:
     - `q`: string (required) - Search query for route nickname
+- **Sample API Call:**
+  ```bash
+  curl -X GET "http://localhost:5000/api/v1/workouts/search?q=Park%20Loop" -H "accept: application/json"
+  ```
 - **Response:**
   - Status Code: 200 OK
   - Content-Type: application/json
