@@ -14,6 +14,48 @@ Workout Logger is a RESTful API service that allows users to log and track their
 
 5. **Secure File Handling**: Werkzeug's secure_filename is used to safely handle file uploads, preventing potential security issues.
 
+## Data Validation
+
+The Workout Logger API implements strong data validation to ensure the integrity and consistency of the data being stored and processed. Here's an overview of the validation process:
+
+1. **Input Parsing**: 
+   - The API uses Flask-RESTful's `reqparse` module to define expected arguments for each endpoint.
+   - Each argument is specified with its type (e.g., float, int, string) and whether it's required.
+
+2. **Type Checking**:
+   - The parser automatically checks that the input data matches the specified types.
+   - For example, 'duration' and 'distance' must be floats, 'heart_rate' must be an integer.
+
+3. **Required Fields**:
+   - Certain fields (duration, distance, route_nickname, date) are marked as required.
+   - The API will return an error if these fields are missing from the request.
+
+4. **Date Format**:
+   - The 'date' field is expected to be in ISO8601 format (YYYY-MM-DDTHH:MM).
+   - The API attempts to parse this string into a Python datetime object.
+
+5. **File Uploads**:
+   - For image uploads, the API checks if a file is present and has a filename.
+   - The filename is sanitized using `werkzeug.utils.secure_filename()` to prevent security issues.
+
+6. **Database Constraints**:
+   - The SQLAlchemy models define additional constraints (e.g., `nullable=False` for required fields).
+   - These ensure data integrity at the database level.
+
+7. **Custom Validation**:
+   - The `calculate_calories_burned()` method includes logic to handle different speed ranges.
+   - This ensures that MET values are assigned correctly based on the workout intensity.
+
+8. **Error Handling**:
+   - If validation fails at any point, the API returns appropriate error messages.
+   - These messages help clients understand what went wrong and how to correct their requests.
+
+9. **Default Values**:
+   - For some fields (e.g., user weight), the API provides default values if not specified.
+   - This ensures that calculations can still be performed even with partial data.
+
+By implementing these validation steps, the Workout Logger API maintains data quality and provides a robust, reliable service for tracking workout information.
+
 ## Backend Tools and Technologies
 
 1. **Flask**: A lightweight Python web framework, chosen for its simplicity and flexibility in building APIs.
