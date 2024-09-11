@@ -24,83 +24,118 @@ Workout Logger is a RESTful API service that allows users to log and track their
 
 4. **Werkzeug**: Used for secure filename handling and WSGI utilities.
 
-## API Endpoints
+## API Documentation
 
-1. GET `/api/v1/workouts`: Retrieve all workouts
-2. POST `/api/v1/workouts`: Create a new workout
-3. DELETE `/api/v1/workouts/<id>`: Delete a specific workout
-4. GET `/api/v1/profile`: Get user profile
-5. PUT `/api/v1/profile`: Update user profile
+Base URL: `/api/v1`
 
-## Data Models
+### 1. Get All Workouts
 
-1. **Workout**:
-   - id: Integer (Primary Key)
-   - duration: Float (minutes)
-   - distance: Float (miles)
-   - route_nickname: String
-   - heart_rate: Integer (optional)
-   - date: DateTime
-   - image_filename: String (optional)
+- **URL:** `/workouts`
+- **Method:** GET
+- **Description:** Retrieves all workouts, sorted by date in descending order.
+- **Parameters:** None
+- **Response:**
+  - Status Code: 200 OK
+  - Content-Type: application/json
+  - Body: Array of workout objects
+    ```json
+    [
+      {
+        "id": 1,
+        "duration": 30.5,
+        "distance": 3.2,
+        "route_nickname": "Park Loop",
+        "heart_rate": 140,
+        "date": "2023-05-15T18:30:00",
+        "pace": 9.53,
+        "calories_burned": 320,
+        "image_url": "/static/uploads/20230515183000_workout.jpg"
+      },
+      ...
+    ]
+    ```
 
-2. **UserProfile**:
-   - id: Integer (Primary Key)
-   - weight: Float
+### 2. Create a New Workout
 
-## Setup and Running the Application
+- **URL:** `/workouts`
+- **Method:** POST
+- **Description:** Creates a new workout entry.
+- **Parameters:**
+  - Body: multipart/form-data
+    - `duration`: float (required) - Duration of the workout in minutes
+    - `distance`: float (required) - Distance of the workout in miles
+    - `route_nickname`: string (required) - Nickname for the workout route
+    - `date`: string (required) - Date and time of the workout in ISO 8601 format (e.g., "2023-05-20T10:00:00")
+    - `heart_rate`: integer (optional) - Average heart rate during the workout
+    - `image`: file (optional) - Image file of the workout
+- **Response:**
+  - Status Code: 201 Created
+  - Content-Type: application/json
+  - Body: Created workout object
+    ```json
+    {
+      "id": 2,
+      "duration": 45.0,
+      "distance": 5.0,
+      "route_nickname": "Riverside Run",
+      "heart_rate": 150,
+      "date": "2023-05-16T07:15:00",
+      "pace": 9.0,
+      "calories_burned": 500,
+      "image_url": "/static/uploads/20230516071500_workout.jpg"
+    }
+    ```
 
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd workout-logger
-   ```
+### 3. Delete a Workout
 
-2. Create a virtual environment and activate it:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
+- **URL:** `/workouts/<id>`
+- **Method:** DELETE
+- **Description:** Deletes a specific workout by ID.
+- **Parameters:**
+  - Path Parameters:
+    - `id`: integer (required) - ID of the workout to delete
+- **Response:**
+  - Status Code: 204 No Content
 
-3. Install the required packages:
-   ```
-   pip install -r requirements.txt
-   ```
+### 4. Get User Profile
 
-4. Run the application:
-   ```
-   python app.py
-   ```
+- **URL:** `/profile`
+- **Method:** GET
+- **Description:** Retrieves the user's profile information.
+- **Parameters:** None
+- **Response:**
+  - Status Code: 200 OK
+  - Content-Type: application/json
+  - Body: User profile object
+    ```json
+    {
+      "id": 1,
+      "weight": 70.5
+    }
+    ```
 
-5. The API will be available at `http://localhost:5000/api/v1`
+### 5. Update User Profile
 
-## Testing the API
-
-You can test the API using tools like cURL or Postman. Here are some example cURL commands:
-
-1. Get all workouts:
-   ```
-   curl http://localhost:5000/api/v1/workouts
-   ```
-
-2. Create a new workout:
-   ```
-   curl -X POST -F "duration=30" -F "distance=3.2" -F "route_nickname=Park Run" -F "date=2023-05-20T10:00:00" http://localhost:5000/api/v1/workouts
-   ```
-
-3. Delete a workout:
-   ```
-   curl -X DELETE http://localhost:5000/api/v1/workouts/1
-   ```
-
-4. Get user profile:
-   ```
-   curl http://localhost:5000/api/v1/profile
-   ```
-
-5. Update user profile:
-   ```
-   curl -X PUT -H "Content-Type: application/json" -d '{"weight": 70.5}' http://localhost:5000/api/v1/profile
-   ```
+- **URL:** `/profile`
+- **Method:** PUT
+- **Description:** Updates the user's profile information.
+- **Parameters:**
+  - Body: application/json
+    ```json
+    {
+      "weight": 70.5
+    }
+    ```
+- **Response:**
+  - Status Code: 200 OK
+  - Content-Type: application/json
+  - Body: Updated user profile object
+    ```json
+    {
+      "id": 1,
+      "weight": 70.5
+    }
+    ```
 
 ## Backend File Structure
 
