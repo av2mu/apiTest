@@ -3,6 +3,7 @@ from datetime import datetime
 
 class Workout(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    profile = db.Column(db.Integer, nullable=False)  # Updated to Integer
     duration = db.Column(db.Float, nullable=False)  # Duration in minutes
     distance = db.Column(db.Float, nullable=False)  # Distance in miles
     route_nickname = db.Column(db.String(100), nullable=False)  # Name of the route
@@ -13,6 +14,7 @@ class Workout(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'profile': self.profile,
             'duration': self.duration,
             'distance': self.distance,
             'route_nickname': self.route_nickname,
@@ -52,11 +54,13 @@ class Workout(db.Model):
 
 class UserProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
     weight = db.Column(db.Float, nullable=False)  # in lbs
 
     def to_dict(self):
         return {
             'id': self.id,
+            'name': self.name,
             'weight': self.weight
         }
 

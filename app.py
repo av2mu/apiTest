@@ -37,6 +37,7 @@ def create_app():
 
     # Request parser for workout creation
     workout_parser = reqparse.RequestParser()
+    workout_parser.add_argument('profile', type=int, default=1, help='Profile ID')
     workout_parser.add_argument('duration', type=float, required=True, help='Duration in minutes is required')
     workout_parser.add_argument('distance', type=float, required=True, help='Distance in miles is required')
     workout_parser.add_argument('route_nickname', type=str, required=True, help='Route nickname is required')
@@ -46,61 +47,47 @@ def create_app():
 
     # Request parser for user profile update
     profile_parser = reqparse.RequestParser()
+    profile_parser.add_argument('name', type=str, required=True, help='Name is required')
     profile_parser.add_argument('weight', type=float, required=True, help='Weight in lbs is required')
 
-    class WorkoutListAPI(Resource):
+    class WorkoutAPI(Resource):
         def get(self):
-            workouts = Workout.query.order_by(Workout.date.desc()).all()
+            query = request.args.get('q', '')
+            if query:
+                workouts = Workout.query.filter(Workout.route_nickname.ilike(f'%{query}%')).order_by(Workout.date.desc()).all()
+            else:
+                workouts = Workout.query.order_by(Workout.date.desc()).all()
+
             user_profile = UserProfile.query.first()
             weight_lbs = user_profile.weight if user_profile else 150  # Default weight in lbs
 
             workout_dicts = []
+            profiles = {profile.id: profile for profile in UserProfile.query.all()}
+            default_weight = 150  # Default weight in lbs
+
             for workout in workouts:
                 workout_dict = workout.to_dict()
-                workout_dict['calories_burned'] = workout.calculate_calories_burned(weight_lbs)
+                profile = profiles.get(workout.profile)
+                weight = profile.weight if profile else default_weight
+                workout_dict['calories_burned'] = workout.calculate_calories_burned(weight)
                 workout_dicts.append(workout_dict)
 
             return workout_dicts
 
         def post(self):
-            print("Content-Type:", request.content_type)
-            print("Form Data:", request.form)
-            print("Files:", request.files)
-            
             try:
-                if request.content_type.startswith('multipart/form-data'):
-                    # Handle form data manually
-                    duration = request.form.get('duration')
-                    distance = request.form.get('distance')
-                    route_nickname = request.form.get('route_nickname')
-                    date = request.form.get('date')
-                    heart_rate = request.form.get('heart_rate')
-                    image = request.files.get('image')
-                else:
-                    # For JSON data
-                    data = request.get_json()
-                    duration = data.get('duration')
-                    distance = data.get('distance')
-                    route_nickname = data.get('route_nickname')
-                    date = data.get('date')
-                    heart_rate = data.get('heart_rate')
-                    image = None
-
-                print("Parsed data:", {
-                    'duration': duration,
-                    'distance': distance,
-                    'route_nickname': route_nickname,
-                    'date': date,
-                    'heart_rate': heart_rate,
-                    'image': image.filename if image else None
-                })
+                args = workout_parser.parse_args()
+                
+                # Handle file upload separately
+                image = request.files.get('image')
                 
                 new_workout = Workout(
-                    duration=float(duration),
-                    distance=float(distance),
-                    route_nickname=route_nickname,
-                    date=datetime.fromisoformat(date),
-                    heart_rate=int(heart_rate) if heart_rate else None
+                    profile=args['profile'],  # This will be 1 if not specified
+                    duration=args['duration'],
+                    distance=args['distance'],
+                    route_nickname=args['route_nickname'],
+                    date=datetime.fromisoformat(args['date']),
+                    heart_rate=args['heart_rate']
                 )
                 
                 if image and image.filename != '':
@@ -112,23 +99,24 @@ def create_app():
                 db.session.add(new_workout)
                 db.session.commit()
                 
-                # Get the user's weight (or use default)
-                user_profile = UserProfile.query.first()
-                weight_lbs = user_profile.weight if user_profile else 150  # Default weight in lbs
+                profile = UserProfile.query.get(new_workout.profile)
+                if not profile:
+                    # If the profile doesn't exist, create a default one
+                    profile = UserProfile(id=1, name="Unknown", weight=150)
+                    db.session.add(profile)
+                    db.session.commit()
                 
-                # Calculate calories burned
-                calories_burned = new_workout.calculate_calories_burned(weight_lbs)
-                
+                calories_burned = new_workout.calculate_calories_burned(profile.weight)
+
                 response_data = new_workout.to_dict()
                 response_data['calories_burned'] = calories_burned
-                
+
                 return response_data, 201
             except Exception as e:
                 print("Error occurred:")
                 print(traceback.format_exc())
                 return {'message': str(e)}, 500
 
-    class WorkoutAPI(Resource):
         def delete(self, id):
             workout = Workout.query.get_or_404(id)
             db.session.delete(workout)
@@ -136,45 +124,55 @@ def create_app():
             return '', 204
 
     class UserProfileAPI(Resource):
-        def get(self):
-            profile = UserProfile.query.first()
-            if not profile:
-                profile = UserProfile(weight=154)  # Default weight in lbs
-                db.session.add(profile)
-                db.session.commit()
+        def get(self, id=None):
+            if id is None:
+                profile = UserProfile.query.first()
+                if not profile:
+                    profile = UserProfile(id=1, name="Unknown", weight=150)  # Default values
+                    db.session.add(profile)
+                    db.session.commit()
+            else:
+                profile = UserProfile.query.get_or_404(id)
             return profile.to_dict()
 
-        def put(self):
-            args = profile_parser.parse_args()
-            profile = UserProfile.query.first()
-            if not profile:
-                profile = UserProfile(weight=args['weight'])
+        def put(self, id=None):
+            if id is None:
+                # Creating a new profile
+                profile = UserProfile()
                 db.session.add(profile)
             else:
-                profile.weight = args['weight']
-            
+                # Updating existing profile
+                profile = UserProfile.query.get_or_404(id)
+
+            parser = reqparse.RequestParser()
+            parser.add_argument('name', type=str, required=True, help='Name is required')
+            parser.add_argument('weight', type=float, required=True, help='Weight in lbs is required')
+            args = parser.parse_args()
+
+            profile.name = args['name']
+            profile.weight = args['weight']
+
+            db.session.commit()
+            return profile.to_dict(), 201 if id is None else 200
+
+        def patch(self, id):
+            profile = UserProfile.query.get_or_404(id)
+            parser = reqparse.RequestParser()
+            parser.add_argument('weight', type=float, required=True, help='Weight in lbs is required')
+            args = parser.parse_args()
+
+            profile.weight = args['weight']
             db.session.commit()
             return profile.to_dict()
 
-    class WorkoutSearchAPI(Resource):
-        def get(self):
-            query = request.args.get('q', '')
-            workouts = Workout.query.filter(Workout.route_nickname.ilike(f'%{query}%')).order_by(Workout.date.desc()).all()
-            user_profile = UserProfile.query.first()
-            weight = user_profile.weight if user_profile else 150  # Default weight if not set (150 lbs)
+        def delete(self, id):
+            profile = UserProfile.query.get_or_404(id)
+            db.session.delete(profile)
+            db.session.commit()
+            return '', 204
 
-            workout_dicts = []
-            for workout in workouts:
-                workout_dict = workout.to_dict()
-                workout_dict['calories_burned'] = workout.calculate_calories_burned(weight)
-                workout_dicts.append(workout_dict)
-
-            return workout_dicts
-
-    api.add_resource(WorkoutListAPI, '/api/v1/workouts')
-    api.add_resource(WorkoutAPI, '/api/v1/workouts/<int:id>')
-    api.add_resource(UserProfileAPI, '/api/v1/profile')
-    api.add_resource(WorkoutSearchAPI, '/api/v1/workouts/search')
+    api.add_resource(WorkoutAPI, '/api/v1/workouts', '/api/v1/workouts/<int:id>')
+    api.add_resource(UserProfileAPI, '/api/v1/profile', '/api/v1/profile/<int:id>')
 
     print("App creation completed in app.py")
     return app

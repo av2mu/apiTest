@@ -10,9 +10,10 @@
     <div id="weightPopup" class="overlay" style="display: none;">
         <div class="popup">
             <h2>Welcome to Workout Logger!</h2>
-            <p>Please enter your weight to help us calculate calories burned:</p>
-            <input type="number" id="weightInput" placeholder="Weight in lbs" step="0.1" min="1" max="1000">
-            <button onclick="saveWeight()">Save</button>
+            <p>Please enter your name and weight (used to calculate calories burned) to set up your profile:</p>
+            <input type="text" id="nameInput" placeholder="Your Name" required>
+            <input type="number" id="weightInput" placeholder="Weight in lbs" step="0.1" min="1" max="1000" required>
+            <button onclick="saveProfile()">Save Profile</button>
         </div>
     </div>
 
@@ -58,39 +59,47 @@
 
         // Weight popup logic
         window.addEventListener('load', function() {
-            if (!localStorage.getItem('userWeight')) {
+            if (!localStorage.getItem('userProfileId')) {
                 document.getElementById('weightPopup').style.display = 'flex';
             } else {
                 loadWorkouts();
             }
         });
 
-        function saveWeight() {
+        function saveProfile() {
+            const name = document.getElementById('nameInput').value;
             const weight = document.getElementById('weightInput').value;
-            if (weight && !isNaN(weight) && weight > 0) {
-                localStorage.setItem('userWeight', weight);
-                document.getElementById('weightPopup').style.display = 'none';
-                
+
+            if (name && weight && !isNaN(weight) && weight > 0) {
+                const profileData = {
+                    name: name,
+                    weight: parseFloat(weight)
+                };
+
                 fetch(`${API_BASE_URL}/profile`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({weight: parseFloat(weight)}),
+                    body: JSON.stringify(profileData),
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.id) {
+                        localStorage.setItem('userProfileId', data.id);
+                        localStorage.setItem('userName', data.name);
+                        localStorage.setItem('userWeight', data.weight);
+                        document.getElementById('weightPopup').style.display = 'none';
                         loadWorkouts();
                     } else {
-                        console.error('Failed to update weight on server');
+                        console.error('Failed to create/update profile on server');
                     }
                 })
                 .catch((error) => {
                     console.error('Error:', error);
                 });
             } else {
-                alert('Please enter a valid weight in pounds.');
+                alert('Please enter a valid name and weight in pounds.');
             }
         }
 

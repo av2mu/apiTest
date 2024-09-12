@@ -14,6 +14,8 @@ Workout Logger is a RESTful API service that allows users to log and track their
 
 5. **Secure File Handling**: Werkzeug's secure_filename is used to safely handle file uploads, preventing potential security issues.
 
+6. **User Profiles**: The API now includes user profile management, allowing for personalized calorie calculations based on user weight.
+
 ## Data Validation
 
 The Workout Logger API implements strong data validation to ensure the integrity and consistency of the data being stored and processed. Here's an overview of the validation process:
@@ -51,10 +53,8 @@ The Workout Logger API implements strong data validation to ensure the integrity
    - These messages help clients understand what went wrong and how to correct their requests.
 
 9. **Default Values**:
-   - For some fields (e.g., user weight), the API provides default values if not specified.
+   - For some fields (e.g., user profile), the API provides default values if not specified.
    - This ensures that calculations can still be performed even with partial data.
-
-By implementing these validation steps, the Workout Logger API maintains data quality and provides a robust, reliable service for tracking workout information.
 
 ## Backend Tools and Technologies
 
@@ -75,10 +75,12 @@ Base URL: `/api/v1`
 - **URL:** `/workouts`
 - **Method:** GET
 - **Description:** Retrieves all workouts, sorted by date in descending order.
-- **Parameters:** None
+- **Parameters:** 
+  - Query Parameters:
+    - `q`: string (optional) - Search query for route nickname
 - **Sample API Call:**
   ```bash
-  curl -X GET "http://localhost:5000/api/v1/workouts" -H "accept: application/json"
+  curl -X GET "http://localhost:5000/api/v1/workouts?q=Park" -H "accept: application/json"
   ```
 - **Response:**
   - Status Code: 200 OK
@@ -88,6 +90,7 @@ Base URL: `/api/v1`
     [
       {
         "id": 1,
+        "profile": 1,
         "duration": 30.5,
         "distance": 3.2,
         "route_nickname": "Park Loop",
@@ -97,6 +100,7 @@ Base URL: `/api/v1`
         "calories_burned": 320,
         "image_url": "/static/uploads/20230515183000_workout.jpg"
       },
+      // ... more workouts
     ]
     ```
 
@@ -107,6 +111,7 @@ Base URL: `/api/v1`
 - **Description:** Creates a new workout entry.
 - **Parameters:**
   - Body: multipart/form-data
+    - `profile`: integer (optional) - Profile ID (defaults to 1 if not provided)
     - `duration`: float (required) - Duration of the workout in minutes
     - `distance`: float (required) - Distance of the workout in miles
     - `route_nickname`: string (required) - Nickname for the workout route
@@ -117,6 +122,7 @@ Base URL: `/api/v1`
   ```bash
   curl -X POST "http://localhost:5000/api/v1/workouts" \
   -H "Content-Type: multipart/form-data" \
+  -F "profile=1" \
   -F "duration=45.0" \
   -F "distance=5.0" \
   -F "route_nickname=Riverside Run" \
@@ -131,6 +137,7 @@ Base URL: `/api/v1`
     ```json
     {
       "id": 2,
+      "profile": 1,
       "duration": 45.0,
       "distance": 5.0,
       "route_nickname": "Riverside Run",
@@ -159,13 +166,15 @@ Base URL: `/api/v1`
 
 ### 4. Get User Profile
 
-- **URL:** `/profile`
+- **URL:** `/profile` or `/profile/<id>`
 - **Method:** GET
 - **Description:** Retrieves the user's profile information.
-- **Parameters:** None
+- **Parameters:** 
+  - Path Parameters:
+    - `id`: integer (optional) - ID of the profile to retrieve
 - **Sample API Call:**
   ```bash
-  curl -X GET "http://localhost:5000/api/v1/profile" -H "accept: application/json"
+  curl -X GET "http://localhost:5000/api/v1/profile/1" -H "accept: application/json"
   ```
 - **Response:**
   - Status Code: 200 OK
@@ -174,28 +183,66 @@ Base URL: `/api/v1`
     ```json
     {
       "id": 1,
+      "name": "John Doe",
       "weight": 70
     }
     ```
 
-### 5. Update User Profile
+### 5. Create or Update User Profile
 
-- **URL:** `/profile`
+- **URL:** `/profile` or `/profile/<id>`
 - **Method:** PUT
-- **Description:** Updates the user's profile information.
+- **Description:** Creates a new profile or updates an existing one.
 - **Parameters:**
+  - Path Parameters:
+    - `id`: integer (optional) - ID of the profile to update
   - Body: application/json
     ```json
     {
-      "weight": 150
+      "name": "John Doe",
+      "weight": 70
     }
     ```
+  - `name`: string (required) - User's name
   - `weight`: float (required) - User's weight in pounds (lbs)
 - **Sample API Call:**
   ```bash
-  curl -X PUT "http://localhost:5000/api/v1/profile" \
+  curl -X PUT "http://localhost:5000/api/v1/profile/1" \
   -H "Content-Type: application/json" \
-  -d '{"weight": 150}'
+  -d '{"name": "John Doe", "weight": 70}'
+  ```
+- **Response:**
+  - Status Code: 200 OK (for update) or 201 Created (for new profile)
+  - Content-Type: application/json
+  - Body: Updated or created user profile object
+    ```json
+    {
+      "id": 1,
+      "name": "John Doe",
+      "weight": 70
+    }
+    ```
+
+### 6. Update User Weight
+
+- **URL:** `/profile/<id>`
+- **Method:** PATCH
+- **Description:** Updates only the weight of an existing profile.
+- **Parameters:**
+  - Path Parameters:
+    - `id`: integer (required) - ID of the profile to update
+  - Body: application/json
+    ```json
+    {
+      "weight": 75
+    }
+    ```
+  - `weight`: float (required) - User's new weight in pounds (lbs)
+- **Sample API Call:**
+  ```bash
+  curl -X PATCH "http://localhost:5000/api/v1/profile/1" \
+  -H "Content-Type: application/json" \
+  -d '{"weight": 75}'
   ```
 - **Response:**
   - Status Code: 200 OK
@@ -204,42 +251,25 @@ Base URL: `/api/v1`
     ```json
     {
       "id": 1,
-      "weight": 150
+      "name": "John Doe",
+      "weight": 75
     }
     ```
 
-### 6. Search Workouts
+### 7. Delete User Profile
 
-- **URL:** `/api/v1/workouts/search`
-- **Method:** GET
-- **Description:** Searches for workouts based on route nickname.
+- **URL:** `/profile/<id>`
+- **Method:** DELETE
+- **Description:** Deletes a specific user profile by ID.
 - **Parameters:**
-  - Query Parameters:
-    - `q`: string (required) - Search query for route nickname
+  - Path Parameters:
+    - `id`: integer (required) - ID of the profile to delete
 - **Sample API Call:**
   ```bash
-  curl -X GET "http://localhost:5000/api/v1/workouts/search?q=Park%20Loop" -H "accept: application/json"
+  curl -X DELETE "http://localhost:5000/api/v1/profile/1"
   ```
 - **Response:**
-  - Status Code: 200 OK
-  - Content-Type: application/json
-  - Body: Array of matching workout objects with calories burned
-    ```json
-    [
-      {
-        "id": 1,
-        "duration": 30.5,
-        "distance": 3.2,
-        "route_nickname": "Park Loop",
-        "heart_rate": 140,
-        "date": "2023-05-15T18:30:00",
-        "pace": 9.53,
-        "calories_burned": 320,
-        "image_url": "/static/uploads/20230515183000_workout.jpg"
-      },
-      // ... more matching workouts
-    ]
-    ```
+  - Status Code: 204 No Content
 
 ## Backend File Structure
 
@@ -264,3 +294,5 @@ workout-logger/
 ├── templates/
 │ └── index.html
 ```
+
+The frontend now includes functionality to create and manage user profiles, which are used for personalized calorie calculations in workouts.
