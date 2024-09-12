@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+import traceback
 from flask import Flask, render_template, request, jsonify
 from flask_restful import Api, Resource, reqparse
 from werkzeug.datastructures import FileStorage
@@ -58,36 +58,35 @@ def create_app():
             else:
                 workouts = Workout.query.order_by(Workout.date.desc()).all()
 
-            user_profile = UserProfile.query.first()
-            weight_lbs = user_profile.weight if user_profile else 150  # Default weight in lbs
-
             workout_dicts = []
             profiles = {profile.id: profile for profile in UserProfile.query.all()}
-            default_weight = 150  # Default weight in lbs
+            default_profile = UserProfile(id=0, name="Unknown", weight=150)  # Default profile
 
             for workout in workouts:
                 workout_dict = workout.to_dict()
-                profile = profiles.get(workout.profile)
-                weight = profile.weight if profile else default_weight
-                workout_dict['calories_burned'] = workout.calculate_calories_burned(weight)
+                profile = profiles.get(workout.profile, default_profile)
+                workout_dict['profile_name'] = profile.name
+                workout_dict['calories_burned'] = workout.calculate_calories_burned(profile.weight)
                 workout_dicts.append(workout_dict)
 
             return workout_dicts
 
         def post(self):
+            if not request.content_type.startswith('multipart/form-data'):
+                return {"message": "Unsupported Media Type. Use multipart/form-data for workout creation."}, 415
+            
             try:
-                args = workout_parser.parse_args()
-                
-                # Handle file upload separately
+                # Handle form data manually
+                data = request.form.to_dict()
                 image = request.files.get('image')
                 
                 new_workout = Workout(
-                    profile=args['profile'],  # This will be 1 if not specified
-                    duration=args['duration'],
-                    distance=args['distance'],
-                    route_nickname=args['route_nickname'],
-                    date=datetime.fromisoformat(args['date']),
-                    heart_rate=args['heart_rate']
+                    profile=int(data.get('profile', 1)),
+                    duration=float(data['duration']),
+                    distance=float(data['distance']),
+                    route_nickname=data['route_nickname'],
+                    date=datetime.fromisoformat(data['date']),
+                    heart_rate=int(data['heart_rate']) if data.get('heart_rate') else None
                 )
                 
                 if image and image.filename != '':
@@ -126,16 +125,21 @@ def create_app():
     class UserProfileAPI(Resource):
         def get(self, id=None):
             if id is None:
-                profile = UserProfile.query.first()
-                if not profile:
-                    profile = UserProfile(id=1, name="Unknown", weight=150)  # Default values
-                    db.session.add(profile)
+                profiles = UserProfile.query.all()
+                if not profiles:
+                    default_profile = UserProfile(id=1, name="Unknown", weight=150)  # Default values
+                    db.session.add(default_profile)
                     db.session.commit()
+                    profiles = [default_profile]
+                return [profile.to_dict() for profile in profiles]
             else:
                 profile = UserProfile.query.get_or_404(id)
-            return profile.to_dict()
+                return profile.to_dict()
 
         def put(self, id=None):
+            if not request.is_json:
+                return {"message": "Unsupported Media Type. Use application/json for profile updates."}, 415
+            
             if id is None:
                 # Creating a new profile
                 profile = UserProfile()
@@ -156,6 +160,9 @@ def create_app():
             return profile.to_dict(), 201 if id is None else 200
 
         def patch(self, id):
+            if not request.is_json:
+                return {"message": "Unsupported Media Type. Use application/json for profile updates."}, 415
+            
             profile = UserProfile.query.get_or_404(id)
             parser = reqparse.RequestParser()
             parser.add_argument('weight', type=float, required=True, help='Weight in lbs is required')

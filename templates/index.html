@@ -90,13 +90,16 @@
                         localStorage.setItem('userName', data.name);
                         localStorage.setItem('userWeight', data.weight);
                         document.getElementById('weightPopup').style.display = 'none';
+                        showFlashMessage('Profile created successfully!', 'success');
                         loadWorkouts();
                     } else {
                         console.error('Failed to create/update profile on server');
+                        showFlashMessage('Failed to create profile.', 'error');
                     }
                 })
                 .catch((error) => {
                     console.error('Error:', error);
+                    showFlashMessage('An error occurred while creating profile.', 'error');
                 });
             } else {
                 alert('Please enter a valid name and weight in pounds.');
@@ -116,6 +119,12 @@
             formData.delete('workout_date');
             formData.delete('workout_time');
             formData.append('date', `${date}T${time}`);
+
+            // Add the user's profile ID to the form data
+            const userProfileId = localStorage.getItem('userProfileId');
+            if (userProfileId) {
+                formData.append('profile', userProfileId);
+            }
 
             fetch(`${API_BASE_URL}/workouts`, {
                 method: 'POST',
@@ -167,6 +176,7 @@
                     </div>
                     <div class="workout-details">
                         <h3>${workout.route_nickname}</h3>
+                        <p>Profile: ${workout.profile_name || 'Unknown'}</p>
                         <p>${workout.distance} miles in ${workout.duration} minutes</p>
                         <p>Pace: ${workout.pace.toFixed(2)} min/mi | 
                            Calories: ${Math.round(workout.calories_burned)}
@@ -181,6 +191,7 @@
             `;
             return workoutDiv;
         }
+        
 
         function deleteWorkout(id) {
             if (confirm('Are you sure you want to delete this workout?')) {
